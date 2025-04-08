@@ -30,11 +30,18 @@ ip netns exec router ethtool -l r_veth
 
 # Add the mq classful qdisc, and add two separate queues
 # TODO: make this cli-arg!!!
-sudo ip netns exec router tc qdisc add dev r_veth root handle 1 mq
-sudo ip netns exec router tc qdisc add dev r_veth parent 1:1 handle 2: fq_pie
-sudo ip netns exec router tc qdisc add dev r_veth parent 1:2 handle 2: fq_codel
+# Create the root mq qdisc with handle 1:
+sudo ip netns exec router tc qdisc add dev r_veth root handle 1: mq
+# Create two classes under the mq qdisc
+# Attach fq_pie to the first class
+sudo ip netns exec router tc qdisc add dev r_veth parent 1:1 handle 10: fq_pie
+# Attach fq_codel to the second class
+sudo ip netns exec router tc qdisc add dev r_veth parent 1:2 handle 20: fq_codel
 
 # Verify changes
 sudo ip netns exec router tc qdisc show
 
 # Add filter!
+sudo ip netns exec router tc filter add dev r_veth parent 1: protocol ip prio 1 u32 match ip dst 192.168.1.2/24 action skbedit queue_mapping 0
+sudo ip netns exec router tc filter add dev r_veth parent 1: protocol ip prio 2 matchall action skbedit queue_mapping 1
+sudo ip netns exec router tc filter show

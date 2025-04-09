@@ -46,9 +46,6 @@ sudo ip netns exec router tc qdisc show
 
 
 # Add filter!
-# sudo ip netns exec router tc filter add dev r_veth parent 1: protocol ip prio 1 u32 match ip dst 192.168.1.2/24 flowid 1:1
-# sudo ip netns exec router tc filter add dev r_veth parent 1: protocol ip prio 2 matchall flowid 1:2
-# sudo ip netns exec router tc filter show
 sudo ip netns exec router tc filter add dev r_veth egress protocol ip prio 1 u32 \
     match ip dst 192.168.1.2/24 \
     action skbedit queue_mapping 0

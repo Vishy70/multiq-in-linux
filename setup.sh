@@ -1,6 +1,11 @@
 #!/bin/bash
 
 # Create the 4 namespaces
+<<<<<<< HEAD
+=======
+echo -e "\e[34m Setup of Namespaces and Switch  \e[0m"
+
+>>>>>>> rian_branch
 ip netns add client
 ip netns add router
 ip netns add server1
@@ -82,3 +87,8 @@ echo -e "\n"
 echo Server2 Routes:
 sudo ip netns exec server2 ip route
 echo -e "\n"
+
+
+#to leave some lines for cuteness
+echo "-----------------------------------------------------------------------------------------------------------------------"
+echo

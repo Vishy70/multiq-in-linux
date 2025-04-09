@@ -1,13 +1,13 @@
 #!/bin/bash
 
 # Create the 4 namespaces
-ip netns add client
-ip netns add router
-ip netns add server1
-ip netns add server2
+sudo ip netns add client
+sudo ip netns add router
+sudo ip netns add server1
+sudo ip netns add server2
 # Create a real linux bridge
-ip link add name switch type bridge
-ip link set switch up
+sudo ip link add name switch type bridge
+sudo ip link set switch up
 
 # Check for successful creation
 echo "List of devices (Network Namespaces)":
@@ -19,19 +19,19 @@ ip link show | grep switch
 echo -e "\n"
 
 # Create vethernet cables
-ip link add c_veth type veth peer name cr_veth
-ip link add r_veth type veth peer name rs_veth
-ip link add s1_veth type veth peer name ss1_veth
-ip link add s2_veth type veth peer name ss2_veth
+sudo ip link add c_veth type veth peer name cr_veth
+sudo ip link add r_veth type veth peer name rs_veth
+sudo ip link add s1_veth type veth peer name ss1_veth
+sudo ip link add s2_veth type veth peer name ss2_veth
 
 # Put the switch cables in the linux bridge!
-ip link set rs_veth up
-ip link set s1_veth up
-ip link set s2_veth up
+sudo ip link set rs_veth up
+sudo ip link set s1_veth up
+sudo ip link set s2_veth up
 
-ip link set rs_veth master switch
-ip link set s1_veth master switch
-ip link set s2_veth master switch
+sudo ip link set rs_veth master switch
+sudo ip link set s1_veth master switch
+sudo ip link set s2_veth master switch
 
 # Put the cables in the netns...
 sudo ip link set c_veth netns client
@@ -58,13 +58,13 @@ sudo ip netns exec server1 ip link set dev ss1_veth up
 sudo ip netns exec server2 ip link set dev ss2_veth up
 
 #Verify that they are in the respective namespaces/bridge
-ip -all netns exec ip a
+sudo ip -all netns exec ip a
 echo -e "\n"
-bridge link show switch
+sudo bridge link show switch
 echo -e "\n"
 
 #Ensure that the router can forward
-ip netns exec router sysctl -w net.ipv4.ip_forward=1
+sudo ip netns exec router sysctl -w net.ipv4.ip_forward=1
 echo -e "\n"
 
 # Add default routes to client, server1, server2

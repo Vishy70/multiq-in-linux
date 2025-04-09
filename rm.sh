@@ -4,10 +4,10 @@ netns_array=($(ip netns list))
 
 for ns in "${netns_array[@]}"; do
     echo "Namespace: $ns deleted"
-    ip netns delete $ns
+    sudo ip netns delete $ns
 done
 
-ip link delete switch
+sudo ip link delete switch
 
 echo List of Network Namespaces:
 ip netns list

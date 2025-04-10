@@ -1,11 +1,8 @@
 #!/bin/bash
 
 # Create the 4 namespaces
-<<<<<<< HEAD
-=======
 echo -e "\e[34m Setup of Namespaces and Switch  \e[0m"
 
->>>>>>> rian_branch
 ip netns add client
 ip netns add router
 ip netns add server1

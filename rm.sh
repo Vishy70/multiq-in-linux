@@ -19,6 +19,10 @@ ip link delete switch
 echo List of Switches:
 ip link show | grep switch
 
+# Switch cable links remain after deleting the switch
+ip link delete s1_veth
+ip link delete s2_veth
+
 
 #to leave some lines for cuteness
 echo "-----------------------------------------------------------------------------------------------------------------------"

@@ -1,7 +1,7 @@
 
 # Initialize previous byte counts
-prev_pie_bytes=0
-prev_codel_bytes=0
+prev_tx1_bytes=0
+prev_tx2_bytes=0
 
 GREEN='\033[0;32m'
 NC='\033[0m' # No Color
@@ -9,31 +9,26 @@ NC='\033[0m' # No Color
 
 print_qdisc_bytes() {
     # Get current byte counts
-    current_pie_bytes=$(ip netns exec router tc -s qdisc show dev r_veth | grep -A5 '10:' | grep 'Sent' | head -n 1 | awk '{print $2}')
-    current_codel_bytes=$(ip netns exec router tc -s qdisc show dev r_veth | grep -A5 '20:' | grep 'Sent' | tail -n 1 | awk '{print $2}')
+    current_tx1_bytes=$(ip netns exec router tc -s qdisc show dev r_veth | grep -A5 '10:' | grep 'Sent' | head -n 1 | awk '{print $2}')
+    current_tx2_bytes=$(ip netns exec router tc -s qdisc show dev r_veth | grep -A5 '20:' | grep 'Sent' | tail -n 1 | awk '{print $2}')
 
     # Calculate deltas
-    delta_pie=$((current_pie_bytes - prev_pie_bytes))
-    delta_codel=$((current_codel_bytes - prev_codel_bytes))
+    delta_tx1=$((current_tx1_bytes - prev_tx1_bytes))
+    delta_tx2=$((current_tx2_bytes - prev_tx2_bytes))
 
     # Print current and delta values
     echo
 
-
-
-    printf "${GREEN}%-25s %-10s | %-25s %-10s${NC}\n" "fq_pie (10:):" "$current_pie_bytes bytes" "fq_codel (20:):" "$current_codel_bytes bytes"
-    printf "${GREEN}%-25s %+10s | %-25s %+10s${NC}\n" "Delta:" "$delta_pie bytes" "Delta:" "$delta_codel bytes"
-
+    printf "${GREEN}%-25s %-10s | %-25s %-10s${NC}\n" "tx ring 1 (10:):" "$current_tx1_bytes bytes" "tx ring 2 (20:):" "$current_tx2_bytes bytes"
+    printf "${GREEN}%-25s %+10s | %-25s %+10s${NC}\n" "Delta:" "$delta_tx1 bytes" "Delta:" "$delta_tx2 bytes"
 
     echo
 
     # Update previous values
-    prev_pie_bytes=$current_pie_bytes
-    prev_codel_bytes=$current_codel_bytes
+    prev_tx1_bytes=$current_tx1_bytes
+    prev_tx2_bytes=$current_tx1_bytes
     echo
 }
-
-
 
 
 echo "Initial Qdisc Bytes"

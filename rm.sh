@@ -2,8 +2,6 @@
 # Print in blue
 echo -e "\e[34mClearing any existing namespaces and switches \e[0m"
 
-
-
 netns_array=($(ip netns list))
 
 for ns in "${netns_array[@]}"; do
@@ -23,7 +21,5 @@ ip link show | grep switch
 ip link delete s1_veth
 ip link delete s2_veth
 
-
-#to leave some lines for cuteness
 echo "-----------------------------------------------------------------------------------------------------------------------"
 echo

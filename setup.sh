@@ -50,18 +50,18 @@ sudo ip link set ss1_veth netns server1
 sudo ip link set ss2_veth netns server2
 
 # ...give the interfaces static IP addresses
-sudo ip netns exec client2 ip a add 192.168.0.4/24 dev c2_veth
-sudo ip netns exec client1 ip a add 192.168.0.3/24 dev c1_veth
-sudo ip netns exec router ip a add 192.168.0.2/24 dev c2r_veth
-sudo ip netns exec router ip a add 192.168.0.1/24 dev c1r_veth
-sudo ip netns exec router ip a add 192.168.1.1/24 dev r_veth
+sudo ip netns exec client2 ip a add 192.168.2.2/24 dev c2_veth
+sudo ip netns exec client1 ip a add 192.168.1.2/24 dev c1_veth
+sudo ip netns exec router ip a add 192.168.2.1/24 dev c2r_veth
+sudo ip netns exec router ip a add 192.168.1.1/24 dev c1r_veth
+sudo ip netns exec router ip a add 192.168.0.1/24 dev r_veth
 
 # The rs_veth does not need an IP address, since it is connected to a switch
 # The s1_veth does not need an IP address, since it is connected to a switch
 # The s2_veth does not need an IP address, since it is connected to a switch
 
-sudo ip netns exec server1 ip a add 192.168.1.2/24 dev ss1_veth
-sudo ip netns exec server2 ip a add 192.168.1.3/24 dev ss2_veth
+sudo ip netns exec server1 ip a add 192.168.0.2/24 dev ss1_veth
+sudo ip netns exec server2 ip a add 192.168.0.3/24 dev ss2_veth
 
 # and bring them up...
 sudo ip netns exec client1 ip link set dev c1_veth up
@@ -83,10 +83,10 @@ ip netns exec router sysctl -w net.ipv4.ip_forward=1
 echo -e "\n"
 
 # Add default routes to client, server1, server2
-sudo ip netns exec client1 ip route add default via 192.168.0.1 dev c1_veth
-sudo ip netns exec client2 ip route add default via 192.168.0.2 dev c2_veth
-sudo ip netns exec server1 ip route add default via 192.168.1.1 dev ss1_veth
-sudo ip netns exec server2 ip route add default via 192.168.1.1 dev ss2_veth
+sudo ip netns exec client1 ip route add default via 192.168.1.1 dev c1_veth
+sudo ip netns exec client2 ip route add default via 192.168.2.1 dev c2_veth
+sudo ip netns exec server1 ip route add default via 192.168.0.1 dev ss1_veth
+sudo ip netns exec server2 ip route add default via 192.168.0.1 dev ss2_veth
 
 # Ensure the default route is added!
 echo Client1 Routes:
@@ -100,6 +100,9 @@ sudo ip netns exec server1 ip route
 echo -e "\n"
 echo Server2 Routes:
 sudo ip netns exec server2 ip route
+echo -e "\n"
+echo Router Routes:
+sudo ip netns exec router ip route
 echo -e "\n"
 
 

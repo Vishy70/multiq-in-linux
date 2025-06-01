@@ -72,6 +72,13 @@ sudo ip netns exec router ip link set dev r_veth up
 sudo ip netns exec server1 ip link set dev ss1_veth up
 sudo ip netns exec server2 ip link set dev ss2_veth up
 
+# Also bring up loopback interface
+sudo ip netns exec client1 ip link set dev lo up
+sudo ip netns exec client2 ip link set dev lo up
+sudo ip netns exec router ip link set dev lo up
+sudo ip netns exec server1 ip link set dev lo up
+sudo ip netns exec server2 ip link set dev lo up
+
 #Verify that they are in the respective namespaces/bridge
 ip -all netns exec ip a
 echo -e "\n"

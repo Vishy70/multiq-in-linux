@@ -112,7 +112,6 @@ echo Router Routes:
 sudo ip netns exec router ip route
 echo -e "\n"
 
-
-#to leave some lines for cuteness
 echo "-----------------------------------------------------------------------------------------------------------------------"
 echo
+exit 0

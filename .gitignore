@@ -1,0 +1,6 @@
+qperf/
+build-qperf/
+tests/
+qperf.out
+server.crt
+server.key

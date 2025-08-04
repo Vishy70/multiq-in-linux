@@ -90,8 +90,23 @@ fi
 # Run the baseline
 for ((i=1;i<=n;i++)); 
 do
-    ./baseline.sh "$TEST_DIR/$filename-baseline-$i"
+    ./traffic-test.sh "$TEST_DIR/$filename-baseline-$i"
 done
 
+if [ $# -eq 0 ];
+then
+    exit 0
+fi
 
 # qdisc-change, filters.sh called on each qdisc update during test
+./qdisc-setup.sh false
+
+for ((i=1;i<=n;i++)); 
+do
+    for qdisc_algo in "$@"; 
+    do
+        ./qdisc-change.sh "$qdisc_algo"
+        ./filters.sh
+        ./traffic-test.sh "$TEST_DIR/$filename-$qdisc_algo-$i"
+    done
+done

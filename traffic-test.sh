@@ -8,7 +8,7 @@ T1 () {
     bw="$3"
     suffix="$4"
 
-    sudo ip netns exec "$client" iperf3 -b 128K -t "$e_time" -i 1 --logfile "$logfile-$client-$bw-$suffix" -u -c "$ip" &
+    sudo ip netns exec "$client" iperf3 -b 128K -t "$e_time" -i 1 --logfile "$logfile-$client-$bw-$suffix" -J -u -c "$ip" &
 }
 
 T2_3 () {
@@ -18,7 +18,7 @@ T2_3 () {
     mss="$4"
     suffix="$5"
 
-    sudo ip netns exec "$client" iperf3 -b "$bw" -t "$e_time" -M "$mss" -i 1 --logfile "$logfile-$client-$bw-$mss-$suffix" -u -c "$ip" &
+    sudo ip netns exec "$client" iperf3 -b "$bw" -t "$e_time" -M "$mss" -i 1 --logfile "$logfile-$client-$bw-$mss-$suffix" -J -u -c "$ip" &
 }
 
 T4 () {
@@ -27,7 +27,7 @@ T4 () {
     ip="$2"
     suffix="$3"
 
-    sudo ip netns exec "$client" iperf3 -b 30M -t "$e_time" -i 1 --logfile "$logfile-$client-30M-$suffix" -c "$ip" &
+    sudo ip netns exec "$client" iperf3 -b 30M -t "$e_time" -i 1 --logfile "$logfile-$client-30M-$suffix" -J -c "$ip" &
 }
 
 T5 () {
@@ -35,7 +35,7 @@ T5 () {
     ip="$2"
     suffix="$3"
 
-    sudo ip netns exec "$client" iperf3 -t "$e_time" -C cubic -i 1 --logfile "$logfile-$client-tcp-sat-$suffix" -c "$ip" &
+    sudo ip netns exec "$client" iperf3 -t "$e_time" -C cubic -i 1 --logfile "$logfile-$client-tcp-sat-$suffix" -J -c "$ip" &
 }
 
 T6 () {

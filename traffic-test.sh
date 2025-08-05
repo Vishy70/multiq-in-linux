@@ -1,6 +1,6 @@
 logfile="$1"
 e_time=30
-cooldown=15
+cooldown=$e_time
 
 T1 () {
     client="$1"
@@ -48,17 +48,17 @@ T6 () {
 
 echo "Setup iperf3 server on Server 1 (192.168.0.2)"
 # -i 1 --logfile "$logfile-server-1"
-sudo ip netns exec server1 iperf3 -J -s &
+sudo ip netns exec server1 iperf3 -s &> "server-dump.txt" &
 
 #echo "Setup qperf server on Server 1 (192.168.0.2)"
 #sudo ip netns exec server1 ./qperf.out --cc cubic -s &
 
 #echo "Setup iperf3 server on Server 2 (192.168.0.3)"
 # -i 1 --logfile "$logfile-server-2"
-sudo ip netns exec server2 iperf3 -J -s &
+sudo ip netns exec server2 iperf3 -s &> "server-dump.txt" &
 
 echo "Setup qperf server on Server 2 (192.168.0.3)"
-sudo ip netns exec server2 ./qperf.out --cc cubic -s "192.168.0.3" &
+sudo ip netns exec server2 ./qperf.out --cc cubic -s "192.168.0.3" &> "server-dump.txt" &
 
 #IPERF3 & QPERF TESTING!!!
 sat_traffic_classes=(T5 T6)

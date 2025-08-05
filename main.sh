@@ -110,3 +110,5 @@ do
         ./traffic-test.sh "$TEST_DIR/$filename-$qdisc_algo-$i"
     done
 done
+
+sudo rm -f server-dump.txt 

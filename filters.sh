@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SERVER1_IP = 192.168.0.2
+SERVER1_IP="192.168.0.2"
 
 echo -e "\e[34m Filters  \e[0m"
 

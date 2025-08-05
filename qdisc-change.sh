@@ -1,6 +1,6 @@
 #!/bin/bash
 
-NEW_QDISC = $1
+NEW_QDISC=$1
 
 # Attach pfifo to the first class ALWAYS
 sudo ip netns exec router tc qdisc add dev r_veth parent 1:1 handle 10: pfifo

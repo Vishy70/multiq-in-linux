@@ -1,17 +1,20 @@
+# Multiq in Linux
+
+## Installation
+NOTE: All scripts require root privileges, so make sure to use sudo!
+
+- Make sure installation.sh is executable:
+`chmod +x installation.sh`
+- Run the install script:
+`sudo ./installation.sh`
+
 ## How to run
 
-- switch to root user (sudo su)
-- chmod +x [./main.sh](./main.sh)
-- [./main.sh](./main.sh)
+- Make sure to run as root user (sudo su) or use sudo.
+- Run the `main` script (entrypoint):
+`./main.sh -h`
+-  Go through the usage to understand the flags, required & optional arguments.
 
-## Tests available
-- [testing.sh](./testing.sh) : Ping tests to manually see where the packets are going!
-- [rate_limiting.sh](./rate_limiting.sh) : IPERF3 testing, using tbf qdisc to shape iperf3 traffic in priority queue!
-- [iperf_test.sh](./iperf_test.sh) : Simple IPERF3 test without additional paramters that can be run on client, saves output in JSON and CSV files!
+## Topology
 
-    Please note: YOU MUST change a couple of lines in [qdisc.sh](./qdisc.sh) to use [testing.sh](./testing.sh) or [rate_limiting.sh](./rate_limiting.sh)
-
-
-    Topology:
-
-    Client -> Router -> Switch -> 1. Server1 2. Server2
+![Client -> Router -> Switch -> 1. Server1 2. Server2](./images/topology.png)

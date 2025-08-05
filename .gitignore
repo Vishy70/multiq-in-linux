@@ -1,6 +1,7 @@
 qperf/
 build-qperf/
 tests/
+tests-csv/
 qperf.out
 server.crt
 server.key

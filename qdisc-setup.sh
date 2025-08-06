@@ -14,10 +14,12 @@ fi
 ip netns exec router ethtool -L r_veth tx "$rings"
 ip netns exec router ethtool -l r_veth
 
-if [ baseline = "false" ];
+if [ $baseline = "false" ];
 then
     # adding multiq
-    sudo ip netns exec router tc qdisc add dev r_veth root handle 1: multiq
+    sudo ip netns exec router tc qdisc replace dev r_veth root handle 1: multiq
+else
+    sudo ip netns exec router tc qdisc add dev r_veth root pfifo
 fi
 
 # Verify changes

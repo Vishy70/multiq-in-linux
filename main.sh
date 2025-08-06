@@ -21,7 +21,7 @@ test_setup() {
 # Default number of iterations: 10
 # Don't reset topology
 # Set filename
-n=1
+n=3
 reset=true
 filename="$1"
 algos=("pie" "fq_codel" "fq_pie")
@@ -76,7 +76,7 @@ shift
 
 if [ $# -gt 0 ];
 then
-    algos=("pfifo" "$@")
+    algos=("$@")
 fi
 
 if [ "$reset" = true ];
@@ -99,16 +99,16 @@ then
 fi
 
 # qdisc-change, filters.sh called on each qdisc update during test
-./qdisc-setup.sh false
+# ./qdisc-setup.sh false
 
-for ((i=1;i<=n;i++)); 
-do
-    for qdisc_algo in "$@"; 
-    do
-        ./qdisc-change.sh "$qdisc_algo"
-        ./filters.sh
-        ./traffic-test.sh "$TEST_DIR/$filename-$qdisc_algo-$i"
-    done
-done
+# for ((i=1;i<=n;i++)); 
+# do
+#     for qdisc_algo in "$@"; 
+#     do
+#         ./qdisc-change.sh "$qdisc_algo"
+#         ./filters.sh
+#         ./traffic-test.sh "$TEST_DIR/$filename-$qdisc_algo-$i"
+#     done
+# done
 
 sudo rm -f server-dump.txt 

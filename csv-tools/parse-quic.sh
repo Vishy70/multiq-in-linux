@@ -22,7 +22,7 @@ done
 for file in "${files[@]}"; 
 do
   
-  if [[ "$file" == *"quic"* ]]; 
+  if [[ "$file" != *"quic"* ]]; 
   then
     continue
   fi
@@ -33,17 +33,23 @@ do
   touch $filename
 
   # Write CSV header
-  echo "start,end,duration,transfer_MB,megabits_per_second" > $filename
+  echo "second,Mbps,bytes_received" > "$filename"
 
   # Extract and append interval data
-  jq -r '
-    .intervals[] |
-    [
-      .sum.start,
-      .sum.end,
-      (.sum.end - .sum.start),
-      (.sum.bytes / (1024*1024)),           # bytes -> MB
-      (.sum.bits_per_second / 1000000)      # bps -> Mbps
-    ] | @csv
+  awk '
+  /^second [0-9]+:/ {
+      gsub(":", "", $2)
+      second = $2
+      mbps = $3
+      for (i = 1; i <= NF; i++) {
+          if ($i ~ /^\([0-9]+$/) {
+              gsub("\\(", "", $i)
+              bytes = $i
+              break
+          }
+      }
+      print second "," mbps "," bytes
+  }
   ' "$src_filename" >> "$filename"
+  
 done

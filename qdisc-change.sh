@@ -10,7 +10,7 @@ sudo ip netns exec router tc qdisc add dev r_veth parent 1:2 handle 20: $NEW_QDI
 if [ $? -eq 2 ]
 then
 
-    echo "Specified qdisc: $NEW_QDISC"
+    echo "Specified qdisc: !$NEW_QDISC!"
     exit 2
 fi
 

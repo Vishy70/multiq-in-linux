@@ -27,3 +27,7 @@ NOTE: All scripts require root privileges, so make sure to use sudo!
 ## Topology
 
 ![Client -> Router -> Switch -> 1. Server1 2. Server2](./images/topology.png)
+
+## Flow of the Scripts
+
+![Flowchart](./images/flowchart.png)

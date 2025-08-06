@@ -99,16 +99,16 @@ then
 fi
 
 # qdisc-change, filters.sh called on each qdisc update during test
-# ./qdisc-setup.sh false
+./qdisc-setup.sh false
 
-# for ((i=1;i<=n;i++)); 
-# do
-#     for qdisc_algo in "$@"; 
-#     do
-#         ./qdisc-change.sh "$qdisc_algo"
-#         ./filters.sh
-#         ./traffic-test.sh "$TEST_DIR/$filename-$qdisc_algo-$i"
-#     done
-# done
+for ((i=1;i<=n;i++)); 
+do
+    for qdisc_algo in "$@"; 
+    do
+        ./qdisc-change.sh "$qdisc_algo"
+        ./filters.sh
+        ./traffic-test.sh "$TEST_DIR/$filename-$qdisc_algo-$i"
+    done
+done
 
 sudo rm -f server-dump.txt 

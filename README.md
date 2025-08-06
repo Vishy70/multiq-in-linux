@@ -18,8 +18,11 @@ NOTE: All scripts require root privileges, so make sure to use sudo!
 - Run the main script with the test-name, qdsics to test:
 
 `./main.sh -n 10 test-name fq_codel fq_pie`
-- Convert the json to csv to generate graphs:
-`./parse-json.sh`
+- Convert the json, qperf quic files to csv to generate graphs:
+
+`./csv-tools/parse-json.sh`
+
+`./csv-tools/parse-quic.sh`
 
 ## Topology
 

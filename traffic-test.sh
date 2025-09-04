@@ -1,4 +1,4 @@
-logfile="$1"
+logdir="$1"
 e_time=30
 cooldown=$e_time
 
@@ -7,8 +7,9 @@ T1 () {
     ip="$2"
     bw="$3"
     suffix="$4"
+    folder="$5"
 
-    sudo ip netns exec "$client" iperf3 -b 128K -t "$e_time" -i 1 --logfile "$logfile-$client-$bw-$suffix" -J -u -c "$ip" &
+    sudo ip netns exec "$client" iperf3 -b 128K -t "$e_time" -i 1 --logfile "$logdir/$folder/$client-$bw-$suffix" -J -u -c "$ip" &
 }
 
 T2_3 () {
@@ -17,8 +18,9 @@ T2_3 () {
     bw="$3"
     mss="$4"
     suffix="$5"
+    folder="$6"
 
-    sudo ip netns exec "$client" iperf3 -b "$bw" -t "$e_time" -M "$mss" -i 1 --logfile "$logfile-$client-$bw-$mss-$suffix" -J -u -c "$ip" &
+    sudo ip netns exec "$client" iperf3 -b "$bw" -t "$e_time" -M "$mss" -i 1 --logfile "$logdir/$folder/$client-$bw-$mss-$suffix" -J -u -c "$ip" &
 }
 
 T4 () {
@@ -26,24 +28,27 @@ T4 () {
     client="$1"
     ip="$2"
     suffix="$3"
+    folder="$4"
 
-    sudo ip netns exec "$client" iperf3 -b 30M -t "$e_time" -i 1 --logfile "$logfile-$client-30M-$suffix" -J -c "$ip" &
+    sudo ip netns exec "$client" iperf3 -b 30M -t "$e_time" -i 1 --logfile "$logdir/$folder/$client-30M-$suffix" -J -c "$ip" &
 }
 
 T5 () {
     client="$1"
     ip="$2"
     suffix="$3"
+    folder="$4"
 
-    sudo ip netns exec "$client" iperf3 -t "$e_time" -C cubic -i 1 --logfile "$logfile-$client-tcp-sat-$suffix" -J -c "$ip" &
+    sudo ip netns exec "$client" iperf3 -t "$e_time" -C cubic -i 1 --logfile "$logdir/$folder/$client-tcp-sat-$suffix" -J -c "$ip" &
 }
 
 T6 () {
     client="$1"
     ip="$2"
     suffix="$3"
+    folder="$4"
 
-    sudo ip netns exec "$client" ./qperf.out -t "$e_time" --cc cubic -c "$ip" &> "$logfile-$client-quic-sat-$suffix" &
+    sudo ip netns exec "$client" ./qperf.out -t "$e_time" --cc cubic -c "$ip" &> "$logdir/$folder/$client-quic-sat-$suffix" &
 }
 
 echo "Setup iperf3 server on Server 1 (192.168.0.2)"
@@ -67,16 +72,25 @@ sat_traffic_classes=(T5 T6)
 for sat_traffic in "${sat_traffic_classes[@]}"; 
 do
 
-    T1 "client1" "192.168.0.2" "128K" "$sat_traffic"
-    $sat_traffic "client2" "192.168.0.3" "128k"
+    echo "Running T1-$sat_traffic"
+    folder="T1-$sat_traffic"
+    mkdir -p $logdir/$folder
+    T1 "client1" "192.168.0.2" "128K" "$sat_traffic" "$folder"
+    $sat_traffic "client2" "192.168.0.3" "128k" "$folder"
     sleep $(($e_time + $cooldown))
 
-    T2_3 "client1" "192.168.0.2" "70K" "150" "$sat_traffic"
-    $sat_traffic "client2" "192.168.0.3" "70K-150"
+    echo "Running T2-$sat_traffic"
+    folder="T2-$sat_traffic"
+    mkdir -p $logdir/$folder
+    T2_3 "client1" "192.168.0.2" "70K" "150" "$sat_traffic" "$folder"
+    $sat_traffic "client2" "192.168.0.3" "70K-150" "$folder"
     sleep $(($e_time + $cooldown))
 
-    T2_3 "client1" "192.168.0.2" "1.5M" "900" "$sat_traffic"
-    $sat_traffic "client2" "192.168.0.3" "1.5M-900"
+    echo "Running T3-$sat_traffic"
+    folder="T3-$sat_traffic"
+    mkdir -p $logdir/$folder
+    T2_3 "client1" "192.168.0.2" "1.5M" "900" "$sat_traffic" "$folder"
+    $sat_traffic "client2" "192.168.0.3" "1.5M-900" "$folder"
     sleep $(($e_time + $cooldown))
 
 done
@@ -85,8 +99,11 @@ done
 for sat_traffic in "${sat_traffic_classes[@]}"; 
 do
 
-    T4 "client1" "192.168.0.2" "$sat_traffic"
-    $sat_traffic "client2" "192.168.0.3" "30M"
+    echo "Running T4-$sat_traffic"
+    folder="T4-$sat_traffic"
+    mkdir -p $logdir/$folder
+    T4 "client1" "192.168.0.2" "$sat_traffic" "$folder"
+    $sat_traffic "client2" "192.168.0.3" "30M" "$folder"
     sleep $(($e_time + $cooldown))
 
 done

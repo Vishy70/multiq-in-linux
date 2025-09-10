@@ -15,7 +15,6 @@ echo
 echo "Router's Filter Configuration "
 sudo ip netns exec router tc -s filter show dev r_veth parent 1:
 
-#to leave some lines for cuteness
 echo "-----------------------------------------------------------------------------------------------------------------------"
 echo
 exit 0

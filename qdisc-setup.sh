@@ -20,6 +20,8 @@ then
     sudo ip netns exec router tc qdisc replace dev r_veth root handle 1: multiq
 else
     sudo ip netns exec router tc qdisc add dev r_veth root pfifo
+    sudo ip netns exec routerbw tc qdisc add dev rbw_veth root netem rate 10mbit
+    sudo ip netns exec routerbw tc qdisc add dev rrbw_veth root netem rate 10mbit
 fi
 
 # Verify changes

@@ -9,6 +9,7 @@ echo -e "\e[34m Setup of Namespaces and Switch  \e[0m"
 ip netns add client1
 ip netns add client2
 ip netns add router
+ip netns add routerbw
 ip netns add server1
 ip netns add server2
 # Create a real linux bridge
@@ -27,16 +28,17 @@ echo -e "\n"
 # Create vethernet cables
 ip link add c1_veth type veth peer name c1r_veth
 ip link add c2_veth type veth peer name c2r_veth
-ip link add r_veth type veth peer name rs_veth
+ip link add r_veth type veth peer name rrbw_veth
+ip link add rbw_veth type veth peer name rbws_veth
 ip link add s1_veth type veth peer name ss1_veth
 ip link add s2_veth type veth peer name ss2_veth
 
 # Put the switch cables in the linux bridge!
-ip link set rs_veth up
+ip link set rbws_veth up
 ip link set s1_veth up
 ip link set s2_veth up
 
-ip link set rs_veth master switch
+ip link set rbws_veth master switch
 ip link set s1_veth master switch
 ip link set s2_veth master switch
 
@@ -46,15 +48,20 @@ sudo ip link set c2_veth netns client2
 sudo ip link set c1r_veth netns router
 sudo ip link set c2r_veth netns router
 sudo ip link set r_veth netns router
+sudo ip link set rrbw_veth netns routerbw
+sudo ip link set rbw_veth netns routerbw
 sudo ip link set ss1_veth netns server1
 sudo ip link set ss2_veth netns server2
 
 # ...give the interfaces static IP addresses
-sudo ip netns exec client2 ip a add 192.168.2.2/24 dev c2_veth
-sudo ip netns exec client1 ip a add 192.168.1.2/24 dev c1_veth
-sudo ip netns exec router ip a add 192.168.2.1/24 dev c2r_veth
-sudo ip netns exec router ip a add 192.168.1.1/24 dev c1r_veth
-sudo ip netns exec router ip a add 192.168.0.1/24 dev r_veth
+sudo ip netns exec client2 ip a add 192.168.3.2/24 dev c2_veth
+sudo ip netns exec client1 ip a add 192.168.2.2/24 dev c1_veth
+sudo ip netns exec router ip a add 192.168.3.1/24 dev c2r_veth
+sudo ip netns exec router ip a add 192.168.2.1/24 dev c1r_veth
+sudo ip netns exec router ip a add 192.168.1.2/30 dev r_veth
+sudo ip netns exec routerbw ip a add 192.168.1.1/30 dev rrbw_veth
+sudo ip netns exec routerbw ip a add 192.168.0.1/24 dev rbw_veth
+
 
 # The rs_veth does not need an IP address, since it is connected to a switch
 # The s1_veth does not need an IP address, since it is connected to a switch
@@ -69,6 +76,8 @@ sudo ip netns exec client2 ip link set dev c2_veth up
 sudo ip netns exec router ip link set dev c1r_veth up
 sudo ip netns exec router ip link set dev c2r_veth up
 sudo ip netns exec router ip link set dev r_veth up
+sudo ip netns exec routerbw ip link set dev rrbw_veth up
+sudo ip netns exec routerbw ip link set dev rbw_veth up
 sudo ip netns exec server1 ip link set dev ss1_veth up
 sudo ip netns exec server2 ip link set dev ss2_veth up
 
@@ -76,6 +85,7 @@ sudo ip netns exec server2 ip link set dev ss2_veth up
 sudo ip netns exec client1 ip link set dev lo up
 sudo ip netns exec client2 ip link set dev lo up
 sudo ip netns exec router ip link set dev lo up
+sudo ip netns exec routerbw ip link set dev lo up
 sudo ip netns exec server1 ip link set dev lo up
 sudo ip netns exec server2 ip link set dev lo up
 
@@ -87,13 +97,20 @@ echo -e "\n"
 
 #Ensure that the router can forward
 ip netns exec router sysctl -w net.ipv4.ip_forward=1
+ip netns exec routerbw sysctl -w net.ipv4.ip_forward=1
 echo -e "\n"
 
 # Add default routes to client, server1, server2
-sudo ip netns exec client1 ip route add default via 192.168.1.1 dev c1_veth
-sudo ip netns exec client2 ip route add default via 192.168.2.1 dev c2_veth
+sudo ip netns exec client1 ip route add default via 192.168.2.1 dev c1_veth
+sudo ip netns exec client2 ip route add default via 192.168.3.1 dev c2_veth
 sudo ip netns exec server1 ip route add default via 192.168.0.1 dev ss1_veth
 sudo ip netns exec server2 ip route add default via 192.168.0.1 dev ss2_veth
+
+# Add extra route in router to forward to servers
+sudo ip netns exec router ip route add 192.168.0.0/24 via 192.168.1.1 dev r_veth
+sudo ip netns exec routerbw ip route add 192.168.2.0/24 via 192.168.1.2 dev rrbw_veth
+sudo ip netns exec routerbw ip route add 192.168.3.0/24 via 192.168.1.2 dev rrbw_veth
+
 
 # Ensure the default route is added!
 echo Client1 Routes:
@@ -110,6 +127,9 @@ sudo ip netns exec server2 ip route
 echo -e "\n"
 echo Router Routes:
 sudo ip netns exec router ip route
+echo -e "\n"
+echo RouterBW Routes:
+sudo ip netns exec routerbw ip route
 echo -e "\n"
 
 echo "-----------------------------------------------------------------------------------------------------------------------"

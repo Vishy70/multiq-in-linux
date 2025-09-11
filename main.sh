@@ -87,7 +87,7 @@ else
     ./qdisc-setup.sh true
 fi
 
-# Run the baseline
+#Run the baseline
 for ((i=1;i<=n;i++)); 
 do
     ./traffic-test.sh "$TEST_DIR/$filename-baseline-$i"
@@ -105,6 +105,7 @@ for ((i=1;i<=n;i++));
 do
     for qdisc_algo in "$@"; 
     do
+        test_setup false
         ./qdisc-change.sh "$qdisc_algo"
         ./filters.sh
         ./traffic-test.sh "$TEST_DIR/$filename-$qdisc_algo-$i"

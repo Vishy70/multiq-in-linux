@@ -3,8 +3,8 @@ build-qperf/
 tests/
 tests-csv/
 tests-plots*/
-qperf.out
-server.crt
-server.key
+*.out
+*.crt
+*.key
 *.txt
 *.zip

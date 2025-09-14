@@ -1,8 +1,10 @@
+.github/
 qperf/
 build-qperf/
 tests/
 tests-csv/
-tests-plots*/
+merged-csv/
+plots/
 qperf.out
 server.crt
 server.key

@@ -1,6 +1,11 @@
 logdir="$1"
-e_time=30
-cooldown=$e_time
+e_time="$2"
+i_time="$3"
+if [ -z "$2" ];
+then
+    e_time=30
+fi
+cooldown=$((e_time / 2))
 
 T1 () {
     client="$1"
@@ -9,6 +14,7 @@ T1 () {
     suffix="$4"
     folder="$5"
 
+    sudo ip netns exec "$client" ping -c "$e_time" -i 1 "$ip" &> "$logdir/$folder/$client-$bw-$suffix-PING.txt" &
     sudo ip netns exec "$client" iperf3 -b 128K -t "$e_time" -i 1 --logfile "$logdir/$folder/$client-$bw-$suffix" -J -u -c "$ip" &
 }
 
@@ -20,6 +26,7 @@ T2_3 () {
     suffix="$5"
     folder="$6"
 
+    sudo ip netns exec "$client" ping -c "$e_time" -i 1 "$ip" &> "$logdir/$folder/$client-$bw-$mss-$suffix-PING.txt" &
     sudo ip netns exec "$client" iperf3 -b "$bw" -t "$e_time" -M "$mss" -i 1 --logfile "$logdir/$folder/$client-$bw-$mss-$suffix" -J -u -c "$ip" &
 }
 

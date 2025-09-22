@@ -15,7 +15,7 @@ mkdir -p "$DEST_DIR"
 find "$SRC_DIR" -type f | while IFS= read -r src_filepath; do
   
   # Check if the filename contains "quic" and skip it; use parse-quic.sh!
-  if [[ "$src_filepath" == *"quic"* ]]; then
+  if [[ "$src_filepath" == *"quic"* || "$src_filepath" == *".txt" ]]; then
     continue
   fi
 

@@ -5,6 +5,7 @@ tests/
 tests-csv/
 merged-csv/
 plots/
+venv/
 *.out
 *.crt
 *.key

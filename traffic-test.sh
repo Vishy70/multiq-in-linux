@@ -18,6 +18,23 @@ T1 () {
     sudo ip netns exec "$client" iperf3 -b 128K -t "$e_time" -i 1 --logfile "$logdir/$folder/$client-$bw-$suffix" -J -u -c "$ip" &
 }
 
+T_UDP_RTT () {
+    client="$1"
+    ip="$2"
+    bw_str="$3" 
+    suffix="$4"
+    folder="$5"
+    mss="$6"
+
+    sudo ip netns exec "$client" python3 ./udp_rtt_client.py \
+        --host "$ip" \
+        --duration "$e_time" \
+        --bitrate "$bw_str" \
+        --size "$mss" \
+        --logfile "$logdir/$folder/$client-$bw_str-$mss-$suffix.txt" &
+
+}
+
 T2_3 () {
     client="$1"
     ip="$2"
@@ -27,7 +44,7 @@ T2_3 () {
     folder="$6"
 
     sudo ip netns exec "$client" ping -c "$e_time" -i 1 "$ip" &> "$logdir/$folder/$client-$bw-$mss-$suffix-PING.txt" &
-    sudo ip netns exec "$client" iperf3 -b "$bw" -t "$e_time" -M "$mss" -i 1 --logfile "$logdir/$folder/$client-$bw-$mss-$suffix" -J -u -c "$ip" &
+    sudo ip netns exec "$client" iperf3 -b "$bw" -t "$e_time" -l "$mss" -i 1 --logfile "$logdir/$folder/$client-$bw-$mss-$suffix" -J -u -c "$ip" &
 }
 
 T4 () {
@@ -62,6 +79,8 @@ echo "Setup iperf3 server on Server 1 (192.168.0.2)"
 # -i 1 --logfile "$logfile-server-1"
 sudo ip netns exec server1 iperf3 -s &> "server-dump.txt" &
 
+sudo ip netns exec server1 python3 ./udp_rtt_server.py --logfile "rtt-server-dump.txt" --host "192.168.0.2" &
+
 #echo "Setup qperf server on Server 1 (192.168.0.2)"
 #sudo ip netns exec server1 ./qperf.out --cc cubic -s &
 
@@ -82,23 +101,32 @@ do
     echo "Running T1-$sat_traffic"
     folder="T1-$sat_traffic"
     mkdir -p $logdir/$folder
-    T1 "client1" "192.168.0.2" "128K" "$sat_traffic" "$folder"
+    # T1 "client1" "192.168.0.2" "128K" "$sat_traffic" "$folder"
+    T_UDP_RTT "client1" "192.168.0.2" "128000" "$sat_traffic" "$folder" "1460"
     $sat_traffic "client2" "192.168.0.3" "128k" "$folder"
     sleep $(($e_time + $cooldown))
+    cat "rtt-server-dump.txt" >> "$logdir/$folder/client1-128000-1460-$sat_traffic.txt"
+    > rtt-server-dump.txt
 
     echo "Running T2-$sat_traffic"
     folder="T2-$sat_traffic"
     mkdir -p $logdir/$folder
-    T2_3 "client1" "192.168.0.2" "70K" "150" "$sat_traffic" "$folder"
+    # T2_3 "client1" "192.168.0.2" "70K" "150" "$sat_traffic" "$folder"
+    T_UDP_RTT "client1" "192.168.0.2" "70000" "$sat_traffic" "$folder" "150"
     $sat_traffic "client2" "192.168.0.3" "70K-150" "$folder"
     sleep $(($e_time + $cooldown))
+    cat "rtt-server-dump.txt" >> "$logdir/$folder/client1-70000-150-$sat_traffic.txt"
+    > rtt-server-dump.txt
 
     echo "Running T3-$sat_traffic"
     folder="T3-$sat_traffic"
     mkdir -p $logdir/$folder
-    T2_3 "client1" "192.168.0.2" "1.5M" "900" "$sat_traffic" "$folder"
+    # T2_3 "client1" "192.168.0.2" "1.5M" "900" "$sat_traffic" "$folder"
+    T_UDP_RTT "client1" "192.168.0.2" "1500000" "$sat_traffic" "$folder" "900"
     $sat_traffic "client2" "192.168.0.3" "1.5M-900" "$folder"
     sleep $(($e_time + $cooldown))
+    cat "rtt-server-dump.txt" >> "$logdir/$folder/client1-1500000-900-$sat_traffic.txt"
+    > rtt-server-dump.txt
 
 done
 

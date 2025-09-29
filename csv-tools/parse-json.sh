@@ -19,6 +19,25 @@ find "$SRC_DIR" -type f | while IFS= read -r src_filepath; do
     continue
   fi
 
+
+  if [[ "$src_filepath" == *".csv"* ]]; then
+      # Cut root directory from the path
+      relative_path="${src_filepath#"$SRC_DIR"/}"
+      # 2. Construct full destination path
+      dest_filepath="$DEST_DIR/${relative_path}"
+      if [ ! -d "$(dirname "$dest_filepath")" ];
+      then
+        mkdir -p "$(dirname "$dest_filepath")"
+      fi
+
+      echo "Moving existing CSV file: $src_filepath to $dest_filepath"
+
+  
+      mv "$src_filepath" "${dest_filepath}"
+    continue
+  fi
+
+
   echo "Parsing file: $src_filepath"
 
   # Cut root directory from the path
@@ -26,8 +45,11 @@ find "$SRC_DIR" -type f | while IFS= read -r src_filepath; do
   # 2. Construct full destination path
   dest_filepath="$DEST_DIR/${relative_path}.csv"
 
-  # Make the file
-  mkdir -p "$(dirname "$dest_filepath")"
+  if [ ! -d "$(dirname "$dest_filepath")" ];
+  then
+    # Make the file
+    mkdir -p "$(dirname "$dest_filepath")"
+  fi
   
   # CSV Header
   echo "start,end,seconds,bytes,bits_per_second,rtt,omitted,sender" > "$dest_filepath"

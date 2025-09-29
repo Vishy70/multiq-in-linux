@@ -24,7 +24,7 @@ find "$SRC_DIR" -type f | while IFS= read -r src_filepath; do
   # Cut root directory from the path
   relative_path="${src_filepath#"$SRC_DIR"/}"
   # 2. Construct full destination path
-  dest_filepath="$DEST_DIR/${relative_path%.*}.csv"
+  dest_filepath="$DEST_DIR/${relative_path}.csv"
 
   # Make the file
   mkdir -p "$(dirname "$dest_filepath")"

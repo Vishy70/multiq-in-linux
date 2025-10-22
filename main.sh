@@ -33,7 +33,7 @@ TEST_DIR="./tests"
 # r: DO NOT reset the topology
 # arg1: test name
 # vargs: list of qdiscs to test over
-while getopts ":n:rh" opt; do
+while getopts "n:rh" opt; do
     case $opt in
     n)
         n="$OPTARG"
@@ -58,6 +58,8 @@ while getopts ":n:rh" opt; do
     esac
 done
 
+shift $((OPTIND - 1))
+
 if [ ! -d $TEST_DIR ];
 then
     mkdir $TEST_DIR
@@ -76,7 +78,7 @@ shift
 
 if [ $# -gt 0 ];
 then
-    algos=("$@")
+    algos=("$@");
 fi
 
 if [ "$reset" = true ];
@@ -88,9 +90,13 @@ else
 fi
 
 #Run the baseline
-for ((i=1;i<=n;i++)); 
+for qdisc_algo in "${algos[@]}";
 do
-    ./traffic-test.sh "$TEST_DIR/$filename-baseline-$i"
+    for ((i=1;i<=n;i++)); 
+    do
+        ./qdisc-change.sh true $qdisc_algo
+        ./traffic-test.sh "$TEST_DIR/$filename-baseline-$qdisc_algo-$i"
+    done
 done
 
 if [ $# -eq 0 ];
@@ -101,15 +107,19 @@ fi
 # qdisc-change, filters.sh called on each qdisc update during test
 ./qdisc-setup.sh false
 
-for ((i=1;i<=n;i++)); 
+./filters.sh
+for qdisc_algo_1 in "${algos[@]}";
 do
-    for qdisc_algo in "$@"; 
+    for qdisc_algo_2 in "${algos[@]}";
     do
-        test_setup false
-        ./qdisc-change.sh "$qdisc_algo"
-        ./filters.sh
-        ./traffic-test.sh "$TEST_DIR/$filename-$qdisc_algo-$i"
+        for ((i=1;i<=n;i++));
+        do
+            ./qdisc-change.sh false "$qdisc_algo_1" "$qdisc_algo_2"
+            ./traffic-test.sh "$TEST_DIR/$filename-$qdisc_algo_1-lat_$qdisc_algo_2-tpt-$i"
+        done
     done
 done
 
 sudo rm -f server-dump.txt 
+
+./rm.sh

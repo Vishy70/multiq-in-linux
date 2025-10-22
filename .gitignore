@@ -12,3 +12,5 @@ venv/
 *.txt
 *.zip
 samsung-live/
+adb
+qperf

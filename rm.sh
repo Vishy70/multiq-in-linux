@@ -12,7 +12,8 @@ done
 echo List of Network Namespaces:
 ip netns list
 
-ip link delete switch
+ip link delete switchcr
+ip link delete switchrs
 
 echo List of Switches:
 ip link show | grep switch

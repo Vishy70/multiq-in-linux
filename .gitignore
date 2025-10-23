@@ -11,6 +11,5 @@ venv/
 *.key
 *.txt
 *.zip
-samsung-live/
 adb
 qperf

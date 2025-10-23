@@ -22,7 +22,7 @@ def parse_file(input_file, output_file, packet_size):
         writer = csv.writer(csvfile)
         writer.writerow([
             "start", "end", "seconds", "bytes",
-            "bits_per_second", "rtt", "omitted", "sender"
+            "bits_per_second", "rtt_ms", "omitted", "sender"
         ])
 
         for i in range(len(send_list) - 1):  # stop before last

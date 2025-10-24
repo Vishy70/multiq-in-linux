@@ -145,6 +145,6 @@ done
 
 sudo ip netns exec server1 pkill iperf3
 sudo ip netns exec server2 pkill ./qperf.out
-sudo ip netns exec server1 pkill ./udp_rtt_server.py
+sudo ip netns exec server1 pkill -f udp_rtt_server.py
 
 exit 0

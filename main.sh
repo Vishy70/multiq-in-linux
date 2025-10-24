@@ -115,7 +115,7 @@ do
         for ((i=1;i<=n;i++));
         do
             ./qdisc-change.sh false "$qdisc_algo_1" "$qdisc_algo_2"
-            ./traffic-test.sh "$TEST_DIR/$filename-$qdisc_algo_1-lat_$qdisc_algo_2-tpt-$i"
+            ./traffic-test.sh "$TEST_DIR/$filename-$qdisc_algo_1-lat-$qdisc_algo_2-tpt-$i"
         done
     done
 done

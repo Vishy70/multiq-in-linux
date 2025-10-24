@@ -6,17 +6,8 @@ import os
 
 def parse_file(input_file, output_file, packet_size):
     with open(input_file, "r") as f:
-        lines = f.readlines()
-
-    # First line -> list of tuples [(seq, send_time), ...]
-    send_list = ast.literal_eval(lines[0].strip())
-    send_data = dict(send_list)  # keep dict for lookup, list for order
-
-    # Second line -> space-separated "seq,time"
-    recv_data = {}
-    for pair in lines[1].strip().split():
-        seq, t = pair.split(",")
-        recv_data[int(seq)] = float(t)
+        # Read the list of (send_time, recv_time) tuples
+        data = sorted(ast.literal_eval(f.read().strip()), key=lambda x: x[0])
 
     with open(output_file, "w", newline="") as csvfile:
         writer = csv.writer(csvfile)
@@ -25,37 +16,35 @@ def parse_file(input_file, output_file, packet_size):
             "bits_per_second", "rtt_ms", "omitted", "sender"
         ])
 
-        for i in range(len(send_list) - 1):  # stop before last
-            seq, send_time = send_list[i]
-            _, next_send_time = send_list[i + 1]
+        for i in range(len(data) - 1):
+            send_time, recv_time = data[i]
+            next_send_time, _ = data[i + 1]
 
             start = send_time
-            end = next_send_time
-            delta = end - start
+            end = recv_time
+            seconds = recv_time - send_time
+            delta = next_send_time - send_time  # time gap between consecutive sends
 
             bits_per_second = ""
             if delta > 0:
                 bits_per_second = (packet_size * 8) / delta
 
-            # RTT using recv timestamp if available
-            rtt = ""
-            if seq in recv_data:
-                rtt = (recv_data[seq] - send_time) * 2
+            rtt_ms = seconds * 1000  # convert to milliseconds
 
             writer.writerow([
                 f"{start:.9f}",
                 f"{end:.9f}",
-                f"{delta:.9f}",
+                f"{seconds:.9f}",
                 packet_size,
                 f"{bits_per_second:.2f}" if bits_per_second else "",
-                f"{rtt:.9f}" if rtt != "" else "",
-                "false" if rtt !="" else "true",  # omitted
+                f"{rtt_ms:.9f}",
+                "false",  # not omitted
                 "true"    # sender
             ])
 
 def process_file(file_path): 
     filename = os.path.basename(file_path) 
-    parse_file(file_path, file_path.replace(".txt", ".csv"),  int(filename.split('-')[2]))
+    parse_file(file_path, file_path.replace(".txt", ".csv").replace("tests","tests-csv"),  int(filename.split('-')[2]))
 
 def walk_and_process(root_dir): 
     for dirpath, _, filenames in os.walk(root_dir): 
@@ -64,6 +53,7 @@ def walk_and_process(root_dir):
             for filename in filenames: 
                 if filename.endswith(".txt"): 
                     file_path = os.path.join(dirpath, filename)
+                    print(file_path)
                     process_file(file_path)
 
 if __name__ == "__main__":

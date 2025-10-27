@@ -125,7 +125,7 @@ fi
 # qdisc-change, filters.sh called on each qdisc update during test
 ./qdisc-setup.sh false $DEV_NAME $SERIAL_NUM
 
-./filters.sh $LAT_IP
+./filters.sh $LAT_IP $DEV_NAME $SERIAL_NUM
 for qdisc_algo_1 in "${algos[@]}";
 do
     for qdisc_algo_2 in "${algos[@]}";

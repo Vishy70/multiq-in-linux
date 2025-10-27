@@ -1,7 +1,8 @@
-# Save this file as udp_rtt_client.py
+# udp_rtt_client.py
 import socket
 import time
 import argparse
+import threading
 import statistics
 
 parser = argparse.ArgumentParser(description="UDP Client for RTT measurement")
@@ -20,62 +21,92 @@ BITRATE = args.bitrate
 PACKET_SIZE = args.size
 LOGFILE = args.logfile
 
-
-if args.bitrate:
-    INTERVAL = (PACKET_SIZE * 8) / args.bitrate
+if BITRATE:
+    INTERVAL = (PACKET_SIZE * 8) / BITRATE
 else:
-    INTERVAL = 1
-
-packets_sent = 0
-packets_received = 0
-sequence_number = 0
+    INTERVAL = 1  
 
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-client_socket.settimeout(max(0.1, INTERVAL * 0.95))
 
-print(f"Sending {SERVER_IP}:{SERVER_PORT} with {PACKET_SIZE}-byte packets for {DURATION} seconds.")
+print(f"Sending to {SERVER_IP}:{SERVER_PORT} with {PACKET_SIZE}-byte packets for {DURATION} seconds.")
 
+sent_packets = {}       
+rtts = []               
+lock = threading.Lock()
+stop_event = threading.Event()
+display_list = []
+
+def receiver_thread():
+    """Continuously receive responses from the server and compute RTTs."""
+    while not stop_event.is_set():
+        try:
+            data, addr = client_socket.recvfrom(2048)
+            recv_time = time.monotonic()
+
+            seq_str = data.split(b',')[0]
+            seq_num = int(seq_str)
+
+            with lock:
+                if seq_num in sent_packets:
+                    send_time = sent_packets.pop(seq_num)
+                    rtt = (recv_time - send_time) * 1000
+                    display_list.append((send_time, recv_time))  
+                    rtts.append(rtt)
+
+        except socket.timeout:
+            continue
+        except Exception as e:
+            print(f"[Receiver] Error: {e}")
+            break
+
+# Start receiver thread
+recv_thread = threading.Thread(target=receiver_thread, daemon=True)
+recv_thread.start()
+
+sequence_number = 0
 start_time = time.monotonic()
 
-sent_packets = [] 
 while (time.monotonic() - start_time) < DURATION:
     sequence_number += 1
     send_time = time.monotonic()
-    sent_packets.append((sequence_number, send_time))
-    # Payload format: "sequence_number,send_timestamp"
-    # We pad the message to meet the desired packet size.
-    payload = f"{sequence_number}".encode('utf-8')
+
+    # Prepare payload
+    payload = f"{sequence_number},".encode('utf-8')
     padding_size = PACKET_SIZE - len(payload)
     if padding_size < 0:
-        print("Error: PACKET_SIZE too small for timestamp.")
+        print("Error: PACKET_SIZE too small for payload.")
         break
-    payload = payload + (b',')
-    padding_size-=1
-    message = payload + (b'A' * padding_size)
-    client_socket.sendto(message, (SERVER_IP, SERVER_PORT))
 
-    # Wait for the next interval
+    message = payload + (b'A' * padding_size)
+    with lock:
+        sent_packets[sequence_number] = send_time
+
+    client_socket.sendto(message, (SERVER_IP, SERVER_PORT))
     time.sleep(max(0, INTERVAL - (time.monotonic() - send_time)))
 
+# Cleanup
+stop_event.set()
+recv_thread.join(timeout=1.0)
 client_socket.close()
 
-# --- Summary ---
-# print("\n--- UDP RTT Statistics ---")
-# loss_percentage = ((packets_sent - packets_received) / packets_sent * 100) if packets_sent > 0 else 0
+# Compute stats
+if rtts:
+    avg_rtt = statistics.mean(rtts)
+    min_rtt = min(rtts)
+    max_rtt = max(rtts)
+    stddev = statistics.stdev(rtts) if len(rtts) > 1 else 0.0
+else:
+    avg_rtt = min_rtt = max_rtt = stddev = 0.0
 
-# summary = f"Packets: Sent = {packets_sent}, Received = {packets_received}, Lost = {packets_sent - packets_received} ({loss_percentage:.2f}% loss)\n"
+summary = (
+    {f"Packets sent: {sequence_number}\n"
+    f"Packets received: {len(rtts)}\n"
+    f"Average RTT: {avg_rtt:.3f} ms\n"
+    f"Min RTT: {min_rtt:.3f} ms\n"
+    f"Max RTT: {max_rtt:.3f} ms\n"
+    f"Stddev: {stddev:.3f} ms\n"
+    f"{'-'*40}\n"}
+)
 
-# if rtt_list:
-#     min_rtt = min(rtt_list)
-#     max_rtt = max(rtt_list)
-#     avg_rtt = statistics.mean(rtt_list)
-#     stddev_rtt = statistics.stdev(rtt_list) if len(rtt_list) > 1 else 0
-#     summary += f"Minimum = {min_rtt:.3f}ms, Maximum = {max_rtt:.3f}ms, Average = {avg_rtt:.3f}ms, StdDev = {stddev_rtt:.3f}ms\n"
-# else:
-#     summary += "No packets were received.\n"
-
-# print(summary)
-
-# Write summary to logfile
-with open(LOGFILE, 'a') as f:
-    f.write(str(sent_packets)+"\n")
+with open(LOGFILE, 'w') as f:
+    f.write(str(display_list) + '\n')

@@ -13,3 +13,4 @@ venv/
 *.zip
 adb
 qperf
+archive/

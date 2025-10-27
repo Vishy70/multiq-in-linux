@@ -21,7 +21,7 @@ test_setup() {
 # Default number of iterations: 10
 # Don't reset topology
 # Set filename
-n=3
+n=1
 reset=true
 filename="$1"
 algos=("pie" "fq_codel" "fq_pie")
@@ -89,13 +89,15 @@ else
     ./qdisc-setup.sh true
 fi
 
+touch rtt-server-dump.txt
+
 #Run the baseline
 for qdisc_algo in "${algos[@]}";
 do
     for ((i=1;i<=n;i++)); 
     do
         ./qdisc-change.sh true $qdisc_algo
-        ./traffic-test.sh "$TEST_DIR/$filename-baseline-$qdisc_algo-$i"
+        #./traffic-test.sh "$TEST_DIR/$filename-baseline-$qdisc_algo-$i"
     done
 done
 
@@ -121,5 +123,6 @@ do
 done
 
 sudo rm -f server-dump.txt 
+sudo rm -f rtt-server-dump.txt
 
 ./rm.sh

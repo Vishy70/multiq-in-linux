@@ -20,10 +20,10 @@ else
     #ifbcs_child1=$(sudo ip netns exec router tc qdisc show dev ifbcs handle 10: 2>/dev/null | awk '/[[:space:]]parent[[:space:]]/ {print $2; exit}')
     #ifbcs_child2=$(sudo ip netns exec router tc qdisc show dev ifbcs handle 20: 2>/dev/null | awk '/[[:space:]]parent[[:space:]]/ {print $2; exit}')
 
-    ./adb -s $serial_num shelltc qdisc del dev $dev_name parent 1:1 handle 10:
-    ./adb -s $serial_num shelltc qdisc del dev $dev_name parent 1:2 handle 20:
-    ./adb -s $serial_num shelltc qdisc add dev $dev_name parent 1:1 handle 10: $QDISC_1
-    ./adb -s $serial_num shelltc qdisc add dev $dev_name parent 1:2 handle 20: $QDISC_2
+    ./adb -s $serial_num shell tc qdisc del dev $dev_name parent 1:1 handle 10:
+    ./adb -s $serial_num shell tc qdisc del dev $dev_name parent 1:2 handle 20:
+    ./adb -s $serial_num shell tc qdisc add dev $dev_name parent 1:1 handle 10: $QDISC_1
+    ./adb -s $serial_num shell tc qdisc add dev $dev_name parent 1:2 handle 20: $QDISC_2
 
 fi
 

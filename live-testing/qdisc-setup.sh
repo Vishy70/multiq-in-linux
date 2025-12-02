@@ -26,7 +26,7 @@ fi
 # Verify changes
 echo
 echo "Router's Qdisc Configuration at $dev_name"
-sudo tc -s qdisc show dev $dev_name
+sudo ./adb -s $serial_num shell tc -s qdisc show dev $dev_name
 
 echo "-----------------------------------------------------------------------------------------------------------------------"
 echo

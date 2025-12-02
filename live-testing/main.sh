@@ -24,12 +24,13 @@ test_setup() {
 n=3
 reset=true
 filename="$1"
-algos=("pie" "fq_codel" "fq_pie")
+baseline_algos=("pfifo" "dualpi2" "fq_codel" "fq_pie")
+algos=("pfifo" "fq_codel" "fq_pie")
 TEST_DIR="./tests"
-LAT_IP=""
-SAT_IP=""
-DEV_NAME=""
-SERIAL_NUM=""
+LAT_IP="192.168.188.123"
+SAT_IP="192.168.188.87"
+DEV_NAME="swlan0"
+SERIAL_NUM="R3CW40HN52J"
 
 # Use getopts to parse optional flags
 # n: number of iterations to run
@@ -83,19 +84,19 @@ then
     exit 1
 fi
 
-if [ -z "$LAT_IP" ];
-then
-    echo "Error: Please provide the Latency Traffic Server's IP Address."
-    usage
-    exit 1
-fi
+# if [ -z "$LAT_IP" ];
+# then
+#     echo "Error: Please provide the Latency Traffic Server's IP Address."
+#     usage
+#     exit 1
+# fi
 
-if [ -z "$SAT_IP" ];
-then
-    echo "Error: Please provide the Saturating Traffic Server's IP Address."
-    usage
-    exit 1
-fi
+# if [ -z "$SAT_IP" ];
+# then
+#     echo "Error: Please provide the Saturating Traffic Server's IP Address."
+#     usage
+#     exit 1
+# fi
 
 # Ignore filename...rest of arguments are qdisc names.
 shift
@@ -108,12 +109,12 @@ fi
 ./qdisc-setup.sh true $DEV_NAME $SERIAL_NUM
 
 #Run the baseline
-for qdisc_algo in "${algos[@]}";
+for qdisc_algo in "${baseline_algos[@]}";
 do
     for ((i=1;i<=n;i++)); 
     do
         ./qdisc-change.sh true $DEV_NAME $SERIAL_NUM $qdisc_algo 
-        ./traffic-test.sh "$TEST_DIR/$filename-baseline-$qdisc_algo-$i"
+        ./traffic-test.sh "$TEST_DIR/$filename-baseline-$qdisc_algo-$i" "$LAT_IP" "$SAT_IP"
     done
 done
 

@@ -3,7 +3,7 @@ LAT_IP="$2"
 SAT_IP="$3"
 e_time="$4"
 i_time="$5"
-if [ -z "$2" ];
+if [ -z "$4" ];
 then
     e_time=30
 fi
@@ -77,20 +77,23 @@ T6 () {
     sudo ./qperf.out -t "$e_time" --cc cubic -c "$ip" &> "$logdir/$folder/$client-quic-sat-$suffix" &
 }
 
-echo "Setup iperf3 server on Server 1 ($LAT_IP)"
-sudo iperf3 -s &> "server-dump.txt" &
+#echo "Setup iperf3 server on Server 1 ($LAT_IP)"
+#sudo iperf3 -s &> "server-dump.txt" &
 
-sudo python3 ./udp_rtt_server.py --logfile "rtt-server-dump.txt" --host "$LAT_IP" &
+#sudo python3 ./udp_rtt_server.py --logfile "rtt-server-dump.txt" --host "$LAT_IP" &
 
 
 #echo "Setup iperf3 server on Server 2 (192.168.0.3)"
-sudo iperf3 -s &> "server-dump.txt" &
+#sudo iperf3 -s &> "server-dump.txt" &
 
-echo "Setup qperf server on Server 2 ($SAT_IP)"
-sudo ./qperf.out --cc cubic -s "$SAT_IP" &> "server-dump.txt" &
+#echo "Setup qperf server on Server 2 ($SAT_IP)"
+#sudo ./qperf.out --cc cubic -s "$SAT_IP" &> "server-dump.txt" &
 
 #IPERF3 & QPERF TESTING!!!
 sat_traffic_classes=(T5 T6)
+
+echo $LAT_IP
+echo $SAT_IP
 
 # Class 1 x Class 3 class1=(T1 T2_3 T2_3)
 for sat_traffic in "${sat_traffic_classes[@]}"; 

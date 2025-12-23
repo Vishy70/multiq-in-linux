@@ -97,7 +97,7 @@ do
     for ((i=1;i<=n;i++)); 
     do
         ./qdisc-change.sh true $qdisc_algo
-        #./traffic-test.sh "$TEST_DIR/$filename-baseline-$qdisc_algo-$i"
+        ./traffic-test.sh "$TEST_DIR/$filename-baseline-$qdisc_algo-$i"
     done
 done
 

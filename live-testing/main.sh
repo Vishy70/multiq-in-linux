@@ -27,10 +27,10 @@ filename="$1"
 baseline_algos=("pfifo" "dualpi2" "fq_codel" "fq_pie")
 algos=("pfifo" "fq_codel" "fq_pie")
 TEST_DIR="./tests"
-LAT_IP="192.168.188.123"
-SAT_IP="192.168.188.87"
-DEV_NAME="swlan0"
-SERIAL_NUM="R3CW40HN52J"
+LAT_IP=""
+SAT_IP=""
+DEV_NAME=""
+SERIAL_NUM=""
 
 # Use getopts to parse optional flags
 # n: number of iterations to run
@@ -101,10 +101,10 @@ fi
 # Ignore filename...rest of arguments are qdisc names.
 shift
 
-if [ $# -gt 0 ];
-then
-    algos=("$@");
-fi
+# if [ $# -gt 0 ];
+# then
+#     algos=("$@");
+# fi
 
 ./qdisc-setup.sh true $DEV_NAME $SERIAL_NUM
 

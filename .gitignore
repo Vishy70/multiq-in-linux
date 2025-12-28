@@ -14,3 +14,4 @@ venv/
 adb
 qperf
 archive/
+ignore/

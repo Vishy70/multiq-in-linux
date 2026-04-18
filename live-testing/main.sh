@@ -1,8 +1,19 @@
 #!/bin/bash
 
-# Cli usage function
+# cli usage function
 usage() {
-  echo -e "Usage: $0 -n <num iterations> -l <lat-server's-ip> -s <saturating-server's-ip> [-r to reset topology, -h for help] (filename) ([list of qdiscs to run])\n"
+  echo -e "Usage: $0 
+  -a <[list of algorithms to run hybrid qdisc tests]>
+  -b <[list of algorithms to run baseline qdisc tests]>
+  -d <device name to configure qdisc>
+  -n <num iterations>
+  -s <serial number of device to connect via adb>
+  -r <reset the virtual topology: include the flag to set>
+  -t <test type: flent|six-traffic-class>
+  -v <whether to use virtual testbed or not: include the flag to set>
+  -L <lat-server's-ip>
+  -S <saturating-server's-ip>
+  (filename)"
 }
 
 test_setup() {
@@ -18,93 +29,132 @@ test_setup() {
     ./qdisc-setup.sh "$baseline" "$DEV_NAME" ""
 }
 
-# Default number of iterations: 10
-# Don't reset topology
-# Set filename
-n=3
-reset=true
-filename="$1"
-baseline_algos=("pfifo" "dualpi2" "fq_codel" "fq_pie")
-algos=("pfifo" "fq_codel" "fq_pie")
-TEST_DIR="./tests"
-LAT_IP=""
-SAT_IP=""
+# configurable parameters of the script
+algos=("pfifo" "fq_pie" "fq_codel")
+baseline_algos=("pfifo" "fq_pie" "fq_codel")
 DEV_NAME=""
 SERIAL_NUM=""
+n=3
+reset=true
+test_name=""
+virtual="false"
+LAT_IP=""
+SAT_IP=""
+filename="qdisc-test"
+TEST_DIR="./tests"
 
-# Use getopts to parse optional flags
-# n: number of iterations to run
-# h: display cli help message
-# r: DO NOT reset the topology
-# arg1: test name
-# vargs: list of qdiscs to test over
-while getopts "n:l:s:rh" opt; do
-    case $opt in
-    n)
-        n="$OPTARG"
-        ;;
-    l)
-        LAT_IP="$OPTARG"
-        ;;
-    s)
-        SAT_IP="$OPTARG"
-        ;;
-    r)
-        reset="false"
-        ;;
-    h)
-        usage
-        exit 0
-        ;;
-    \?)
-  	    echo "Invalid option: -$OPTARG"
-        usage
+positional_args=() # For normal arguments without flags
+# guardrail function while parsing args
+require_arg() {
+    local flag="$1"
+    local arg="$2"
+    if [[ -z "$arg" || "$arg" =~ ^- ]]; then
+        echo "Error: The $flag flag requires a valid argument."
         exit 1
-  	    ;;
-	:)
-  	    echo "Option -$OPTARG requires an argument."
-  	    usage
-        exit 1
-        ;;
+    fi
+}
+
+# Arg parse loop
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        -a)
+            require_arg $1 $2
+            shift
+            algos=()
+            while [[ "$#" -gt 0 && ! "$1" =~ ^- ]]; do
+                algos+=("$1")
+                shift
+            done
+            ;;
+        -b)
+            require_arg $1 $2
+            shift
+            baseline_algos=()
+            while [[ "$#" -gt 0 && ! "$1" =~ ^- ]]; do
+                baseline_algos+=("$1")
+                shift
+            done
+            ;;
+        -d)
+            require_arg $1 $2
+            DEV_NAME=$2
+            shift 2
+            ;;
+        -n) 
+            require_arg $1 $2
+            n=$2
+            shift 2
+            ;;
+        -s)
+            require_arg $1 $2
+            SERIAL_NUM=$2
+            shift 2
+            ;;
+        -r)
+            reset="true"
+            shift
+            ;;
+        -t)
+            require_arg $1 $2
+            test_name=$2
+            shift 2
+            ;;
+        -v)
+            virtual="true"
+            shift
+            ;;
+        -L) 
+            require_arg $1 $2
+            LAT_IP=$2
+            shift 2
+            ;;
+        -S)
+            require_arg $1 $2
+            SAT_IP=$2
+            shift 2
+            ;;
+        -h)
+            usage
+            exit 0
+            ;;
+        -*)
+            echo "Error: Unknown flag passed: $1"
+            usage
+            exit 1
+            ;;
+        *)
+            # standard positional arguments
+            positional_args+=("$1")
+            shift
+            ;;
     esac
 done
 
-shift $((OPTIND - 1))
+filename=${positional_args[0]}
 
+# null / does not exist checks
 if [ ! -d $TEST_DIR ];
 then
     mkdir $TEST_DIR
 fi
-
-# Verify filename exists
-if [ -z "$1" ];
+if [ -z "$filename" ];
 then
     echo "Error: Filename is required."
     usage
     exit 1
 fi
-
-# if [ -z "$LAT_IP" ];
-# then
-#     echo "Error: Please provide the Latency Traffic Server's IP Address."
-#     usage
-#     exit 1
-# fi
-
-# if [ -z "$SAT_IP" ];
-# then
-#     echo "Error: Please provide the Saturating Traffic Server's IP Address."
-#     usage
-#     exit 1
-# fi
-
-# Ignore filename...rest of arguments are qdisc names.
-shift
-
-# if [ $# -gt 0 ];
-# then
-#     algos=("$@");
-# fi
+if [ test_name = "six-traffic-class" &&-z "$LAT_IP" ];
+then
+    echo "Error: Please provide the Latency Traffic Server's IP Address."
+    usage
+    exit 1
+fi
+if [ test_name = "six-traffic-class" && -z "$SAT_IP" ];
+then
+    echo "Error: Please provide the Saturating Traffic Server's IP Address."
+    usage
+    exit 1
+fi
 
 ./qdisc-setup.sh true $DEV_NAME $SERIAL_NUM
 
@@ -114,19 +164,23 @@ do
     for ((i=1;i<=n;i++)); 
     do
         ./qdisc-change.sh true $DEV_NAME $SERIAL_NUM $qdisc_algo 
-        ./traffic-test.sh "$TEST_DIR/$filename-baseline-$qdisc_algo-$i" "$LAT_IP" "$SAT_IP"
+        case test_name in
+        flent)
+            ./flent-test.sh "$qdisc_algo" "$i" "${TEST_DIR}/${qdisc_algo}"
+        ;;
+        six-traffic-class)
+            ./traffic-test.sh "$TEST_DIR/$filename-baseline-$qdisc_algo-$i" "$LAT_IP" "$SAT_IP"
+        ;;
+        *)
+            echo "No supported test for baseline for test named: $testname."
+        esac        
     done
 done
 
-if [ $# -eq 0 ];
-then
-    exit 0
-fi
-
-# qdisc-change, filters.sh called on each qdisc update during test
+# qdisc-change, filters applied for hybrid qdisc setup
 ./qdisc-setup.sh false $DEV_NAME $SERIAL_NUM
-
 ./filters.sh $LAT_IP $DEV_NAME $SERIAL_NUM
+
 for qdisc_algo_1 in "${algos[@]}";
 do
     for qdisc_algo_2 in "${algos[@]}";
@@ -134,11 +188,16 @@ do
         for ((i=1;i<=n;i++));
         do
             ./qdisc-change.sh false $DEV_NAME $SERIAL_NUM "$qdisc_algo_1" "$qdisc_algo_2"
-            ./traffic-test.sh "$TEST_DIR/$filename-$qdisc_algo_1-lat_$qdisc_algo_2-tpt-$i" "$LAT_IP" "$SAT_IP" 
+
+            case test_name in
+            six-traffic-class)
+                ./traffic-test.sh "$TEST_DIR/$filename-$qdisc_algo_1-lat_$qdisc_algo_2-tpt-$i" "$LAT_IP" "$SAT_IP"
+            ;;
+            *)
+                echo "No supported test for hybrid qdisc test for test named: $testname."
+            esac
         done
     done
 done
 
 sudo rm -f server-dump.txt 
-
-./rm.sh

@@ -19,7 +19,8 @@ usage() {
 test_setup() {
     local baseline="$1"
 
-    if [[ "$virtual" = true]];
+    # NOTE: fixed missing space before ]] (was a syntax error: "true]")
+    if [[ "$virtual" = true ]];
     then
         # Remove topology setup
         ./rm.sh
@@ -162,6 +163,21 @@ then
     exit 1
 fi
 
+# ------------------------------------------------------------------
+# Resume support: a checkpoint file records "<qdisc>:<iter>:DONE"
+# lines once an iteration's full set of sub-tests has been validated
+# (see flent-test.sh). If main.sh is re-run after a connection
+# failure, already-completed (qdisc, iteration) pairs are skipped
+# entirely, and flent-test.sh itself resumes any partially-completed
+# iteration at the sub-test level.
+# ------------------------------------------------------------------
+CHECKPOINT_FILE="${TEST_DIR}/.checkpoint"
+touch "$CHECKPOINT_FILE"
+
+is_done() {
+    grep -Fxq "$1" "$CHECKPOINT_FILE"
+}
+
 # Setup the real / virtual topology, qdiscs
 test_setup true
 
@@ -170,10 +186,22 @@ for qdisc_algo in "${baseline_algos[@]}";
 do
     for ((i=1;i<=n;i++)); 
     do
+        if is_done "${qdisc_algo}:${i}:DONE"; then
+            echo "Skipping already-completed iteration: $qdisc_algo (iter $i)"
+            continue
+        fi
+
         ./qdisc-change.sh $virtual true $qdisc_algo "" $DEV_NAME $SERIAL_NUM 
         case "$test_name" in
         flent)
             ./flent-test.sh "$qdisc_algo" "$i" "${TEST_DIR}/${qdisc_algo}"
+            flent_status=$?
+            if [[ $flent_status -ne 0 ]]; then
+                echo "Error: flent test failed for qdisc=$qdisc_algo iteration=$i."
+                echo "Progress so far is saved in $CHECKPOINT_FILE."
+                echo "Fix the connection issue and re-run this script with the same arguments to resume."
+                exit 1
+            fi
         ;;
         six-traffic-class)
             #./traffic-test.sh "$TEST_DIR/$filename-baseline-$qdisc_algo-$i" "$LAT_IP" "$SAT_IP"

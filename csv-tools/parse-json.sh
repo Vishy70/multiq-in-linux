@@ -33,7 +33,7 @@ find "$SRC_DIR" -type f | while IFS= read -r src_filepath; do
       echo "Moving existing CSV file: $src_filepath to $dest_filepath"
 
   
-      mv "$src_filepath" "${dest_filepath}"
+      cp "$src_filepath" "${dest_filepath}"
     continue
   fi
 

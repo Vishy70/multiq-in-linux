@@ -19,7 +19,7 @@ usage() {
 test_setup() {
     local baseline="$1"
 
-    if [[ "$virtual" = true]];
+    if [[ "$virtual" = true ]];
     then
         # Remove topology setup
         ./rm.sh
@@ -33,8 +33,8 @@ test_setup() {
 }
 
 # configurable parameters of the script
-algos=("pfifo" "fq_pie" "fq_codel")
-baseline_algos=("pfifo" "fq_pie" "fq_codel")
+algos=("fq_pie" "fq_codel")
+baseline_algos=("fq_pie" "fq_codel")
 DEV_NAME=""
 SERIAL_NUM=""
 n=3
@@ -166,9 +166,9 @@ fi
 test_setup true
 
 #Run the baseline
-for qdisc_algo in "${baseline_algos[@]}";
+for ((i=1;i<=n;i++));
 do
-    for ((i=1;i<=n;i++)); 
+    for qdisc_algo in "${baseline_algos[@]}";
     do
         ./qdisc-change.sh $virtual true $qdisc_algo "" $DEV_NAME $SERIAL_NUM 
         case "$test_name" in
@@ -181,11 +181,11 @@ do
         ;;
         *)
             echo "No supported test for baseline for test named: $testname."
-        esac        
+        esac
     done
 done
 
-# qdisc-change, filters applied for hybrid qdisc setup
+#qdisc-change, filters applied for hybrid qdisc setup
 # ./qdisc-setup.sh "$virtual" "false" "$DEV_NAME" "$SERIAL_NUM"
 
 # for qdisc_algo_1 in "${algos[@]}";
@@ -194,8 +194,8 @@ done
 #     do
 #         for ((i=1;i<=n;i++));
 #         do
-#             ./qdisc-change.sh $virtual false "$qdisc_algo_1" "$qdisc_algo_2" $DEV_NAME $SERIAL_NUM
-#             ./filters.sh "$virtual" "$LAT_IP" "$DEV_NAME" "$SERIAL_NUM"
+#             #./qdisc-change.sh $virtual false "$qdisc_algo_1" "$qdisc_algo_2" $DEV_NAME $SERIAL_NUM
+#             #./filters.sh "$virtual" "$LAT_IP" "$DEV_NAME" "$SERIAL_NUM"
 
 #             case "$test_name" in
 #             six-traffic-class)

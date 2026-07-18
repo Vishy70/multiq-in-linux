@@ -35,9 +35,6 @@ then
     if [ $baseline = "false" ];
     then
         # adding multiq
-        #ifbcs_root=$(sudo ip netns exec router tc qdisc show dev ifbcs handle 1: 2>/dev/null | awk '/[[:space:]]root[[:space:]]/ {print $2; exit}')
-        #ifbsc_root=$(sudo ip netns exec router tc qdisc show dev ifbsc handle 1: 2>/dev/null | awk '/[[:space:]]root[[:space:]]/ {print $2; exit}')
-        
         #sudo ip netns exec router tc qdisc del dev ifbcs root handle 1:
         #sudo ip netns exec router tc qdisc del dev ifbsc root handle 1:
         
@@ -91,13 +88,17 @@ else
         ./adb -s $serial_num shell tc qdisc add dev $dev_name parent 1:2 handle 20: pfifo
     else
         ./adb -s $serial_num shell tc qdisc del dev $dev_name clsact
-        ./adb -s $serial_num shell tc qdisc add dev $dev_name root handle 1: pfifo
+        if [[ $? = 2 ]];
+        then
+            echo "Immediately previous Invalid argument error is due to clsact already being deleted"
+        fi
+        ./adb -s $serial_num shell tc qdisc del dev $dev_name root
     fi
 
     # Verify changes
     echo
     echo "Router's Qdisc Configuration at $dev_name"
-    sudo ./adb -s $serial_num shell tc -s qdisc show dev $dev_name
+    sudo ./adb -s $serial_num shell tc qdisc show dev $dev_name
 fi
 
 echo "-----------------------------------------------------------------------------------------------------------------------"
